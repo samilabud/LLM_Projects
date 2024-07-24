@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "name": "Alice Johnson",
+    "email": "alice.johnson@example.com",
+    "age": 28,
+    "country": "USA",
+    "isActive": true,
+    "registrationDate": "2023-01-12"
+  }
+]
