@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Car Game</title>
+    <style>
+      body {
+        background: #f0f0f0;
+        font-family: sans-serif;
+      }
+
+      canvas {
+        background: #4caf50;
+        display: block;
+        margin: 50px auto;
+      }
+
+      #velocity {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 20px;
+      }
+
+      #reset {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div id="velocity">Velocity: 20 km/h</div>
+    <button id="reset">Reset Game</button>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const velocityDisplay = document.getElementById("velocity");
+      const resetButton = document.getElementById("reset");
+
+      const carWidth = 50;
+      const carHeight = 30;
+      let carX = canvas.width / 2 - carWidth / 2;
+      let carY = canvas.height - carHeight - 10;
+
+      let velocity = 20;
+      const minVelocity = 20;
+      const maxVelocity = 100;
+
+      const obstacleWidth = 40;
+      const obstacleHeight = 30;
+      let obstacles = [];
+
+      let treeSpacing = 80;
+      let gameOver = false;
+
+      const carImage = new Image();
+      carImage.src = "car.png"; // Replace with the URL of your car image
+
+      function drawCar() {
+        ctx.drawImage(carImage, carX, carY, carWidth, carHeight);
+      }
+
+      function drawObstacles() {
+        ctx.fillStyle = "blue";
+        obstacles.forEach((obstacle) => {
+          ctx.fillRect(obstacle.x, obstacle.y, obstacleWidth, obstacleHeight);
+        });
+      }
+
+      function drawTrees() {
+        const treeWidth = 10;
+        const treeHeight = 20;
+        ctx.fillStyle = "brown";
+
+        for (let y = 0; y < canvas.height; y += treeSpacing) {
+          // Left side trees
+          ctx.fillRect(0, y, treeWidth, treeHeight);
+          // Right side trees
+          ctx.fillRect(canvas.width - treeWidth, y, treeWidth, treeHeight);
+        }
+      }
+
+      function createObstacle() {
+        let obstacleX = Math.random() * (canvas.width - obstacleWidth);
+        let obstacleY = -obstacleHeight;
+        obstacles.push({ x: obstacleX, y: obstacleY });
+      }
+
+      function moveObstacles() {
+        obstacles.forEach((obstacle, index) => {
+          obstacle.y += velocity / 10;
+
+          if (obstacle.y > canvas.height) {
+            obstacles.splice(index, 1);
+          }
+
+          if (
+            carX < obstacle.x + obstacleWidth &&
+            carX + carWidth > obstacle.x &&
+            carY < obstacle.y + obstacleHeight &&
+            carY + carHeight > obstacle.y
+          ) {
+            gameOver = true;
+          }
+        });
+      }
+
+      function adjustTreeSpacing() {
+        treeSpacing = 80 - velocity / 2;
+      }
+
+      function gameLoop() {
+        if (!gameOver) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawTrees();
+          drawCar();
+          drawObstacles();
+
+          if (Math.random() < 0.01) {
+            createObstacle();
+          }
+
+          moveObstacles();
+          adjustTreeSpacing();
+
+          requestAnimationFrame(gameLoop);
+        } else {
+          alert("Game Over!");
+        }
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (!gameOver) {
+          if (event.key === "ArrowLeft" && carX > 0) {
+            carX -= 20;
+          } else if (
+            event.key === "ArrowRight" &&
+            carX < canvas.width - carWidth
+          ) {
+            carX += 20;
+          } else if (event.key === "ArrowUp" && velocity < maxVelocity) {
+            velocity += 5;
+            velocityDisplay.textContent = `Velocity: ${velocity} km/h`;
+          } else if (event.key === "ArrowDown" && velocity > minVelocity) {
+            velocity -= 5;
+            velocityDisplay.textContent = `Velocity: ${velocity} km/h`;
+          }
+        }
+      });
+
+      resetButton.addEventListener("click", function () {
+        gameOver = false;
+        carX = canvas.width / 2 - carWidth / 2;
+        velocity = 20;
+        velocityDisplay.textContent = `Velocity: ${velocity} km/h`;
+        obstacles = [];
+        gameLoop();
+      });
+
+      carImage.onload = function () {
+        gameLoop();
+      };
+    </script>
+  </body>
+</html>
