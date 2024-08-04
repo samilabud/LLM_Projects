@@ -10,20 +10,13 @@ This is a simple React application that fetches and displays a list of movies us
 
 ## Installation
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/yourusername/movie-list-app.git
-   cd movie-list-app
-   ```
-
-2. Install dependencies:
+1. Install dependencies:
 
    ```bash
    npm install
    ```
 
-3. Start the development server:
+2. Start the development server:
 
    ```bash
    npm start
