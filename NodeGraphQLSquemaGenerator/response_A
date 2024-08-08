@@ -1,0 +1,73 @@
+const express = require("express");
+const { graphqlHTTP } = require("express-graphql");
+const { buildSchema } = require("graphql");
+const fs = require("fs");
+
+const app = express();
+
+// Function to load schema from JSON configuration
+function loadSchemaFromJson(filePath) {
+  const jsonData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+
+  // Build GraphQL schema from JSON data
+  let schemaString = "";
+  for (const typeName in jsonData) {
+    schemaString += `type ${typeName} {\n`;
+    for (const fieldName in jsonData[typeName]) {
+      const fieldType = jsonData[typeName][fieldName];
+      schemaString += `  ${fieldName}: ${fieldType}\n`;
+    }
+    schemaString += "}\n\n";
+  }
+
+  return buildSchema(schemaString);
+}
+
+// Example JSON configuration for schema
+const schemaConfig = {
+  User: {
+    id: "ID!",
+    name: "String!",
+    email: "String!",
+  },
+  Post: {
+    id: "ID!",
+    title: "String!",
+    content: "String!",
+    author: "User!",
+  },
+};
+
+// Dynamically generate schema from JSON configuration
+const schema = loadSchemaFromJson("./schema.json");
+
+// Root resolver (replace with your actual data fetching logic)
+const root = {
+  getUser: ({ id }) => {
+    // Fetch user by ID from your data source
+    return { id, name: "John Doe", email: "john.doe@example.com" };
+  },
+  getPost: ({ id }) => {
+    // Fetch post by ID from your data source
+    return {
+      id,
+      title: "Sample Post",
+      content: "This is a sample post.",
+      author: { id: 1 },
+    };
+  },
+};
+
+// GraphQL endpoint
+app.use(
+  "/graphql",
+  graphqlHTTP({
+    schema: schema,
+    rootValue: root,
+    graphiql: true, // Enable GraphiQL for testing
+  })
+);
+
+app.listen(4000, () =>
+  console.log("Server running on http://localhost:4000/graphql")
+);

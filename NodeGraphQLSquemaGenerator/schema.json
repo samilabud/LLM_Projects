@@ -1,0 +1,18 @@
+{
+    "Query": {
+      "getUser": "User",
+      "getPost": "Post"
+    },
+    "User": {
+      "id": "ID!",
+      "name": "String!",
+      "email": "String!"
+    },
+    "Post": {
+      "id": "ID!",
+      "title": "String!",
+      "content": "String!",
+      "author": "User!"
+    }
+  }
+  
