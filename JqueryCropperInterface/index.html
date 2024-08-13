@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Cropper</title>
+    <!-- Cropper.js CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/cropperjs/dist/cropper.css"
+    />
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      .container {
+        margin: 20px auto;
+        max-width: 800px;
+        text-align: center;
+      }
+
+      #image {
+        max-width: 100%;
+      }
+
+      .progress {
+        display: none;
+        margin-top: 20px;
+      }
+
+      .progress-bar {
+        width: 0;
+        height: 20px;
+        background-color: green;
+        text-align: center;
+        color: white;
+      }
+
+      .alert {
+        display: none;
+        margin-top: 20px;
+      }
+
+      #button {
+        display: none;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Image Cropper</h1>
+      <img id="image" src="your-image.jpg" alt="Image for cropping" />
+      <div id="result"></div>
+
+      <div class="crop-options">
+        <button
+          class="cropBtn"
+          data-method="move"
+          data-option="-10"
+          data-second-option="0"
+        >
+          Move Left
+        </button>
+        <button
+          class="cropBtn"
+          data-method="move"
+          data-option="10"
+          data-second-option="0"
+        >
+          Move Right
+        </button>
+        <button
+          class="cropBtn"
+          data-method="move"
+          data-option="0"
+          data-second-option="-10"
+        >
+          Move Up
+        </button>
+        <button
+          class="cropBtn"
+          data-method="move"
+          data-option="0"
+          data-second-option="10"
+        >
+          Move Down
+        </button>
+        <button class="cropBtn" data-method="rotate" data-option="45">
+          Rotate 45°
+        </button>
+        <button class="cropBtn" data-method="zoom" data-option="0.1">
+          Zoom In
+        </button>
+        <button class="cropBtn" data-method="zoom" data-option="-0.1">
+          Zoom Out
+        </button>
+        <button class="cropBtn" data-method="scaleX" data-option="1">
+          Flip Horizontal
+        </button>
+        <button class="cropBtn" data-method="scaleY" data-option="1">
+          Flip Vertical
+        </button>
+        <button class="cropBtn" data-method="reset">Reset</button>
+      </div>
+
+      <div>
+        <input type="text" id="filename" placeholder="Enter file name" />
+        <button id="button">Crop & Upload</button>
+      </div>
+
+      <div class="progress">
+        <div class="progress-bar"></div>
+      </div>
+
+      <div class="alert"></div>
+
+      <pre id="data"></pre>
+    </div>
+
+    <!-- Cropper.js -->
+    <script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", function () {
+        var image = document.querySelector("#image");
+        var data = document.querySelector("#data");
+        var button = document.getElementById("button");
+        var result = document.getElementById("result");
+        var $progress = $(".progress");
+        var $progressBar = $(".progress-bar");
+        var minCroppedWidth = 256;
+        var minCroppedHeight = 256;
+        var maxCroppedWidth = 1280;
+        var maxCroppedHeight = 1280;
+        var $alert = $(".alert");
+        let scaleX = -1;
+        let scaleY = -1;
+        var cropper = new Cropper(image, {
+          aspectRatio: "<?=$ratio?>",
+          autoCrop: true,
+
+          viewMode: 0,
+          zoomable: true,
+          dragMode: "move",
+
+          data: {
+            width: (minCroppedWidth + maxCroppedWidth) / 2,
+            height: (minCroppedHeight + maxCroppedHeight) / 2,
+          },
+
+          crop: function (event) {
+            var width = Math.round(event.detail.width);
+            var height = Math.round(event.detail.height);
+
+            console.log(width, height, minCroppedWidth, maxCroppedWidth);
+            if (
+              width < minCroppedWidth ||
+              height < minCroppedHeight ||
+              width > maxCroppedWidth ||
+              height > maxCroppedHeight
+            ) {
+              cropper.setData({
+                width: Math.max(
+                  minCroppedWidth,
+                  Math.min(maxCroppedWidth, width)
+                ),
+                height: Math.max(
+                  minCroppedHeight,
+                  Math.min(maxCroppedHeight, height)
+                ),
+              });
+            }
+
+            data.textContent = JSON.stringify(cropper.getData(true));
+          },
+          ready: function () {
+            // Added 'ready' event handler
+            // Get image dimensions
+            var imageWidth = image.naturalWidth;
+            var imageHeight = image.naturalHeight;
+
+            // Calculate center coordinates
+            var cropBoxWidth = (minCroppedWidth + maxCroppedWidth) / 2;
+            var cropBoxHeight = (minCroppedHeight + maxCroppedHeight) / 2;
+            var x = (imageWidth - cropBoxWidth) / 2;
+            var y = (imageHeight - cropBoxHeight) / 2;
+
+            // Set initial crop box data
+            this.cropper.setData({
+              x: x,
+              y: y,
+              width: cropBoxWidth,
+              height: cropBoxHeight,
+            });
+          },
+        });
+
+        $(document).on("click", ".cropBtn", function () {
+          let method = $(this).attr("data-method");
+
+          console.log(method);
+          //multiple options
+          if (method == "move") {
+            cropper.move(
+              $(this).attr("data-option"),
+              $(this).attr("data-second-option")
+            );
+            //single option
+          } else if (method == "rotate") {
+            cropper.rotate($(this).attr("data-option"));
+          } else if (method == "zoom") {
+            cropper.zoom($(this).attr("data-option"));
+          } else if (method == "scaleX") {
+            console.log(scaleX);
+            cropper.scaleX(scaleX);
+            if (scaleX == 1) {
+              scaleX = -1;
+            } else {
+              scaleX = 1;
+            }
+          } else if (method == "scaleY") {
+            cropper.scaleY(scaleY);
+            if (scaleY == 1) {
+              scaleY = -1;
+            } else {
+              scaleY = 1;
+            }
+          } else if (method == "reset") {
+            cropper.reset();
+          }
+        });
+
+        button.onclick = function () {
+          result.innerHTML = "";
+          result.appendChild(cropper.getCroppedCanvas());
+          if (cropper) {
+            canvas = cropper.getCroppedCanvas({
+              fillColor: "transparent",
+              width: 280,
+              height: 360,
+            });
+
+            $progress.show();
+            $alert.removeClass("alert-success alert-warning");
+            canvas.toBlob(function (blob) {
+              var formData = new FormData();
+
+              formData.append("avatar", blob, "avatar.png");
+              formData.append("userfile", blob, $("#filename").val());
+              formData.append("origfile", blob, "<?=$files[0]?>");
+              formData.append("uploadType", blob, "<?=$type?>");
+              formData.append("aspectRatio", blob, "<?=$ratio?>");
+              $.ajax("<?=$us_url_root?>customers/files/parsers/img_crop.php", {
+                method: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+
+                xhr: function () {
+                  var xhr = new XMLHttpRequest();
+
+                  xhr.upload.onprogress = function (e) {
+                    var percent = "0";
+                    var percentage = "0%";
+
+                    if (e.lengthComputable) {
+                      percent = Math.round((e.loaded / e.total) * 100);
+                      percentage = percent + "%";
+                      $progressBar
+                        .width(percentage)
+                        .attr("aria-valuenow", percent)
+                        .text(percentage);
+                    }
+                  };
+
+                  return xhr;
+                },
+
+                success: function () {
+                  $alert
+                    .show()
+                    .addClass("alert-success")
+                    .text("Upload success");
+                  location.reload();
+                },
+
+                error: function () {
+                  $alert.show().addClass("alert-warning").text("Upload error");
+                  location.reload();
+                },
+
+                complete: function () {
+                  $progress.hide();
+                  location.reload();
+                },
+              });
+            });
+          }
+        };
+      });
+
+      $(document).on("keyup", "#filename", function () {
+        let filename = $("#filename").val();
+
+        if (filename != "") {
+          $("#button").show();
+        } else {
+          $("#button").hide();
+        }
+      });
+
+      $(document).on("keypress", function (e) {
+        if (e.which == 13) {
+          let filename = $("#filename").val();
+          if (filename != "") {
+            $("#button").click();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
